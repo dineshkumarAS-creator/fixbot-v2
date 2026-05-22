@@ -1,5 +1,7 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/dineshkumarAS-creator/fixbot-v2/main/assets/banner.png" alt="Fixbot Banner" width="800px" style="max-width: 100%;">
+  ![Uploading WhatsApp Image 2026-05-21 at 3.38.43 AM.jpeg…]()
+
+
 </p>
 
 <h1 align="center">🤖 Fixbot v4.0</h1>
