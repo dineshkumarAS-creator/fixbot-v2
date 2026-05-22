@@ -177,6 +177,7 @@ def print_help() -> None:
     table.add_row("report / reports", "List recent diagnostic reports")
     table.add_row("clear",            "Clear the screen")
     table.add_row("exit / quit",      "Exit fixbot")
+    table.add_row("game / /fixgame",  "Launch Fixbot Arcade — Support Bot: Ticket Rush")
     console.print()
     console.print(table)
     console.print()

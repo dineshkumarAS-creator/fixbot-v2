@@ -60,6 +60,8 @@ COMMANDS = {
     "live tabs": "tabs",
     "report": "report",
     "reports": "report",
+    "game": "game",
+    "/fixgame": "game",
 }
 
 # Matches Windows absolute paths (quoted or unquoted, no embedded spaces)
@@ -311,6 +313,102 @@ def _do_file_delete(query: str, mem: "ConversationMemory") -> None:
     else:
         print_info("Delete cancelled.")
 
+    console.print()
+
+
+def _launch_game() -> None:
+    """Arcade boot screen then launch Ticket Rush."""
+    import time as _time
+
+    theme_col = get_theme_color()
+    _ANSI = {
+        "yellow": "\033[93m", "magenta": "\033[95m", "cyan": "\033[96m",
+    }
+    col   = _ANSI.get(theme_col, "\033[96m")
+    reset = "\033[0m"
+    bold  = "\033[1m"
+    dim   = "\033[2m"
+    green = "\033[92m"
+    white = "\033[97m"
+
+    title_lines = [
+        r"  ███████╗██╗██╗  ██╗██████╗  ██████╗ ████████╗",
+        r"  ██╔════╝██║╚██╗██╔╝██╔══██╗██╔═══██╗╚══██╔══╝",
+        r"  █████╗  ██║ ╚███╔╝ ██████╔╝██║   ██║   ██║   ",
+        r"  ██╔══╝  ██║ ██╔██╗ ██╔══██╗██║   ██║   ██║   ",
+        r"  ██║     ██║██╔╝ ██╗██████╔╝╚██████╔╝   ██║   ",
+        r"  ╚═╝     ╚═╝╚═╝  ╚═╝╚═════╝  ╚═════╝    ╚═╝   ",
+    ]
+
+    sys.stdout.write("\n")
+    for line in title_lines:
+        sys.stdout.write(f"{bold}{col}{line}{reset}\n")
+        sys.stdout.flush()
+        _time.sleep(0.045)
+
+    sys.stdout.write(f"\n  {col}A R C A D E   ·   T I C K E T   R U S H{reset}\n\n")
+    sys.stdout.flush()
+    _time.sleep(0.3)
+
+    _BAR_W = 28
+    _STEPS = [
+        ("Loading assets",         0.45),
+        ("Spawning tickets",       0.50),
+        ("Booting game engine",    0.55),
+        ("Configuring obstacles",  0.35),
+        ("Priming double-jump",    0.30),
+    ]
+
+    for label, dur in _STEPS:
+        for i in range(_BAR_W + 1):
+            filled = "█" * i
+            empty  = "░" * (_BAR_W - i)
+            pct    = int(100 * i / _BAR_W)
+            sys.stdout.write(
+                f"\r  {dim}{label:<26}{reset}  "
+                f"{col}[{filled}{empty}]{reset}  {white}{pct:3d}%{reset}"
+            )
+            sys.stdout.flush()
+            _time.sleep(dur / _BAR_W)
+
+        sys.stdout.write(
+            f"\r  {dim}{label:<26}{reset}  "
+            f"{green}[{'█' * _BAR_W}]{reset}  {green}[OK]{reset}\n"
+        )
+        sys.stdout.flush()
+
+    sys.stdout.write(
+        f"\n  {bold}{col}▶  LAUNCHING  —  "
+        f"SPACE=Jump   P=Pause   Q=Quit   R=Restart{reset}\n\n"
+    )
+    sys.stdout.flush()
+    _time.sleep(0.7)
+
+    try:
+        import curses as _curses
+    except ImportError:
+        console.print("  [dim]windows-curses not found — installing...[/dim]")
+        from display.animations import WgetBar
+        bar = WgetBar(label="windows-curses", color=theme_col)
+        rc, out = bar.run(["pip", "install", "windows-curses", "--quiet"])
+        if rc != 0:
+            print_err("Failed to install windows-curses. Run manually: pip install windows-curses")
+            return
+        try:
+            import curses as _curses
+        except ImportError:
+            print_err("Still could not import curses after install. Restart the terminal and try again.")
+            return
+
+    try:
+        from games.ticket_rush import run_game
+        _curses.wrapper(run_game)
+    except Exception as exc:
+        print_err(f"Game error: {exc}")
+        return
+
+    console.print()
+    print_ok("Back in Fixbot.")
     console.print()
 
 
@@ -669,6 +767,9 @@ def main() -> None:
             if action == "tabs":
                 tabs = executor.system_health.list_browser_tabs(filter_name=filter_arg)
                 print_browser_tab_table(tabs)
+                continue
+            if action == "game":
+                _launch_game()
                 continue
 
         if user_input.lower().startswith("ticket "):
